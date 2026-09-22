@@ -53,7 +53,7 @@ func StartBot(cfg *config.Config, ctx context.Context) error {
 		return err
 	}
 
-	app = NewBotApp(b)
+	app = NewBotApp(b, cfg.API_ENDPOINT)
 	app.RegisterGuarantorFSM()
 
 	_, err = b.DeleteWebhook(ctx, &bot.DeleteWebhookParams{
@@ -90,7 +90,7 @@ func StartBot(cfg *config.Config, ctx context.Context) error {
 			resp, err := apiRequest(
 				ctx,
 				http.MethodPost,
-				"http://localhost:8080/api/register",
+				cfg.API_ENDPOINT+"/api/register",
 				update.Message.From.ID,
 				body,
 			)
@@ -160,6 +160,7 @@ As-Scam
 
 			user, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				identifier,
 				update.Message.From.ID,
 				true,
@@ -204,7 +205,7 @@ As-Scam
 		resp, err := apiRequest(
 			ctx,
 			http.MethodGet,
-			"http://localhost:8080/api/me",
+			cfg.API_ENDPOINT+"/api/me",
 			update.Message.From.ID,
 			nil,
 		)
@@ -259,7 +260,7 @@ As-Scam
 
 	// Обновления роли пользователя (ТОЛЬКО АДМИНЫ)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/set_role", bot.MatchTypePrefix, func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		me, err := getUser(ctx, strconv.FormatInt(update.Message.From.ID, 10), update.Message.From.ID, false)
+		me, err := getUser(ctx, cfg.API_ENDPOINT, strconv.FormatInt(update.Message.From.ID, 10), update.Message.From.ID, false)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.From.ID,
@@ -289,7 +290,7 @@ As-Scam
 			return
 		}
 
-		user, err := getUser(ctx, identifier, update.Message.From.ID, false)
+		user, err := getUser(ctx, cfg.API_ENDPOINT, identifier, update.Message.From.ID, false)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.From.ID,
@@ -319,6 +320,7 @@ As-Scam
 
 			me, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -358,7 +360,7 @@ As-Scam
 				ctx,
 				http.MethodPost,
 				fmt.Sprintf(
-					"http://localhost:8080/api/guarantor/trainee/%d",
+					cfg.API_ENDPOINT+"/api/guarantor/trainee/%d",
 					targetID,
 				),
 				update.Message.From.ID,
@@ -420,6 +422,7 @@ As-Scam
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/add_g", bot.MatchTypePrefix, func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		me, err := getUser(
 			ctx,
+			cfg.API_ENDPOINT,
 			strconv.FormatInt(update.Message.From.ID, 10),
 			update.Message.From.ID,
 			false,
@@ -479,7 +482,7 @@ As-Scam
 			return
 		}
 
-		resp, err := apiRequest(ctx, "POST", "http://localhost:8080/api/admin/guarantor/add", update.Message.From.ID, marshaled)
+		resp, err := apiRequest(ctx, "POST", cfg.API_ENDPOINT+"/api/admin/guarantor/add", update.Message.From.ID, marshaled)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.From.ID,
@@ -511,6 +514,7 @@ As-Scam
 		func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			me, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -614,7 +618,7 @@ As-Scam
 			_, err = apiRequest(
 				ctx,
 				"PUT",
-				"http://localhost:8080/api/admin/scammer",
+				cfg.API_ENDPOINT+"/api/admin/scammer",
 				update.Message.From.ID,
 				marshaled,
 			)
@@ -646,6 +650,7 @@ As-Scam
 			// Проверяем администратора.
 			me, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -714,7 +719,7 @@ As-Scam
 			resp, err := apiRequest(
 				ctx,
 				http.MethodPut,
-				"http://localhost:8080/api/admin/user/complete",
+				cfg.API_ENDPOINT+"/api/admin/user/complete",
 				update.Message.From.ID,
 				marshaled,
 			)
@@ -784,6 +789,7 @@ As-Scam
 
 			me, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -817,25 +823,26 @@ As-Scam
 				return
 			}
 
-			user, err := getUser(
-				ctx,
-				identifier,
-				update.Message.From.ID,
-				false,
-			)
+user, err := getUser(
+			ctx,
+			cfg.API_ENDPOINT,
+			identifier,
+			update.Message.From.ID,
+			false,
+		)
 
-			if err != nil {
-				b.SendMessage(ctx, &bot.SendMessageParams{
-					ChatID: update.Message.Chat.ID,
-					Text:   "Пользователь не найден.",
-				})
-				return
-			}
+		if err != nil {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: update.Message.Chat.ID,
+				Text:   "Пользователь не найден.",
+			})
+			return
+		}
 
-			resp, err := apiRequest(
-				ctx,
-				http.MethodPut,
-				"http://localhost:8080/api/admin/user/warn/"+strconv.FormatInt(user.TgID, 10),
+		resp, err := apiRequest(
+			ctx,
+			http.MethodPut,
+			cfg.API_ENDPOINT+"/api/admin/user/warn/"+strconv.FormatInt(user.TgID, 10),
 				update.Message.From.ID,
 				nil,
 			)
@@ -919,6 +926,7 @@ As-Scam
 
 			me, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -952,25 +960,26 @@ As-Scam
 				return
 			}
 
-			user, err := getUser(
-				ctx,
-				identifier,
-				update.Message.From.ID,
-				false,
-			)
+user, err := getUser(
+			ctx,
+			cfg.API_ENDPOINT,
+			identifier,
+			update.Message.From.ID,
+			false,
+		)
 
-			if err != nil {
-				b.SendMessage(ctx, &bot.SendMessageParams{
-					ChatID: update.Message.Chat.ID,
-					Text:   "Пользователь не найден.",
-				})
-				return
-			}
+		if err != nil {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: update.Message.Chat.ID,
+				Text:   "Пользователь не найден.",
+			})
+			return
+		}
 
-			resp, err := apiRequest(
-				ctx,
-				http.MethodPut,
-				"http://localhost:8080/api/admin/user/unwarn/"+strconv.FormatInt(user.TgID, 10),
+		resp, err := apiRequest(
+			ctx,
+			http.MethodPut,
+			cfg.API_ENDPOINT+"/api/admin/user/unwarn/"+strconv.FormatInt(user.TgID, 10),
 				update.Message.From.ID,
 				nil,
 			)
@@ -1037,6 +1046,7 @@ As-Scam
 
 			me, err := getUser(
 				ctx,
+				cfg.API_ENDPOINT,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -1075,7 +1085,7 @@ As-Scam
 				ctx,
 				http.MethodDelete,
 				fmt.Sprintf(
-					"http://localhost:8080/api/guarantor/trainee/%d",
+					cfg.API_ENDPOINT+"/api/guarantor/trainee/%d",
 					targetID,
 				),
 				update.Message.From.ID,
@@ -1156,7 +1166,7 @@ As-Scam
 				ctx,
 				http.MethodDelete,
 				fmt.Sprintf(
-					"http://localhost:8080/api/guarantor/trainee/%s",
+					cfg.API_ENDPOINT+"/api/guarantor/trainee/%s",
 					url.PathEscape(strconv.FormatInt(targetID, 10)),
 				),
 				update.Message.From.ID,
@@ -1209,7 +1219,7 @@ As-Scam
 	)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/guarantors", bot.MatchTypeExact, func(ctx context.Context, b *bot.Bot, update *models.Update) {
-		resp, err := apiRequest(ctx, "GET", "http://localhost:8080/api/guarantors", update.Message.From.ID, nil)
+		resp, err := apiRequest(ctx, "GET", cfg.API_ENDPOINT+"/api/guarantors", update.Message.From.ID, nil)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.From.ID,
@@ -1333,7 +1343,7 @@ As-Scam
 
 		identifier := parts[0]
 
-		resp, err := apiRequest(ctx, "DELETE", fmt.Sprintf("http://localhost:8080/api/admin/guarantors/remove/%s", identifier), update.Message.From.ID, nil)
+		resp, err := apiRequest(ctx, "DELETE", fmt.Sprintf(cfg.API_ENDPOINT+"/api/admin/guarantors/remove/%s", identifier), update.Message.From.ID, nil)
 		if err != nil {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID: update.Message.Chat.ID,
@@ -1386,7 +1396,7 @@ As-Scam
 		if err != nil {
 			return
 		}
-		resp, err := apiRequest(ctx, "PUT", "http://localhost:8080/api/admin/user/role/"+
+		resp, err := apiRequest(ctx, "PUT", cfg.API_ENDPOINT+"/api/admin/user/role/"+
 			url.PathEscape(strconv.FormatInt(targetTGID, 10)), actorTGID, body)
 		if err != nil {
 			log.Printf("update user role err: %v", err)

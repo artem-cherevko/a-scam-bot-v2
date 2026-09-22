@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	API_PORT      string `env:"API_PORT" envDefault:"8080"`
+	API_ENDPOINT  string `env:"API_ENDPOINT" envDefault:"http://localhost:8080"`
 	DSN           string `env:"DB_DSN" envDefault:"postgres://postgres:postgres@postgres:5432/a_scam?sslmode=disable"`
 	BOT_TOKEN     string `env:"BOT_TOKEN,required"`
 	BOT_USER_NAME string `env:"BOT_USER_NAME,required"`

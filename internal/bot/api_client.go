@@ -51,13 +51,14 @@ func apiRequest(
 // getUser получает пользователя по Telegram ID или username.
 func getUser(
 	ctx context.Context,
+	baseURL string,
 	identifier string,
 	requesterID int64,
 	isCheck bool,
 ) (*UserResponse, error) {
 	identifier = strings.TrimSpace(identifier)
 
-	requestURL := "http://localhost:8080/api/user/" +
+	requestURL := baseURL + "/api/user/" +
 		url.PathEscape(identifier)
 
 	if isCheck {

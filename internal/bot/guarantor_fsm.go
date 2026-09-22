@@ -25,14 +25,16 @@ const (
 )
 
 type BotApp struct {
-	b   *bot.Bot
-	fsm *fsm.FSM
+	b         *bot.Bot
+	fsm       *fsm.FSM
+	apiBaseURL string
 }
 
-func NewBotApp(b *bot.Bot) *BotApp {
+func NewBotApp(b *bot.Bot, apiBaseURL string) *BotApp {
 	return &BotApp{
-		b:   b,
-		fsm: fsm.New(StateDefault, nil),
+		b:         b,
+		fsm:       fsm.New(StateDefault, nil),
+		apiBaseURL: apiBaseURL,
 	}
 }
 
@@ -95,6 +97,7 @@ func (app *BotApp) RegisterGuarantorFSM() {
 
 			me, err := getUser(
 				ctx,
+				app.apiBaseURL,
 				strconv.FormatInt(update.Message.From.ID, 10),
 				update.Message.From.ID,
 				false,
@@ -129,6 +132,7 @@ func (app *BotApp) RegisterGuarantorFSM() {
 
 			target, err := getUser(
 				ctx,
+				app.apiBaseURL,
 				identifier,
 				update.Message.From.ID,
 				false,
@@ -209,7 +213,7 @@ func (app *BotApp) RegisterGuarantorFSM() {
 				resp, err := apiRequest(
 					ctx,
 					http.MethodPut,
-					"http://localhost:8080/api/admin/guarantor/reset/"+strconv.FormatInt(targetTGID, 10),
+					app.apiBaseURL+"/api/admin/guarantor/reset/"+strconv.FormatInt(targetTGID, 10),
 					actorID,
 					nil,
 				)
@@ -409,13 +413,13 @@ func (app *BotApp) HandleGuarantorFSMMessage(
 		return
 	}
 
-	resp, err := apiRequest(
-		ctx,
-		http.MethodPut,
-		"http://localhost:8080/api/admin/guarantor/edit/"+guarantorID,
-		userID,
-		payload,
-	)
+resp, err := apiRequest(
+				ctx,
+				http.MethodPut,
+				app.apiBaseURL+"/api/admin/guarantor/edit/"+guarantorID,
+				userID,
+				payload,
+			)
 	if err != nil {
 		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: update.Message.Chat.ID,
