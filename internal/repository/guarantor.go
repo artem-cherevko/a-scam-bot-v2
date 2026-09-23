@@ -41,7 +41,7 @@ func (r *GuarantorRepositoryImpl) CreateGuarantor(guarantor *database.Guarantors
 
 func (r *GuarantorRepositoryImpl) GetAllGuarantors() ([]database.Guarantors, error) {
 	var guarantors []database.Guarantors
-	if err := r.db.Select("tg_user_id", "rank", "chanel_url", "proofs_count", "region", "trainee_ids").Find(&guarantors).Error; err != nil {
+	if err := r.db.Select("tg_user_id", "rank", "chanel_url", "proofs_count", "region", "trainee_ids").Order("proofs_count DESC").Find(&guarantors).Error; err != nil {
 		return nil, err
 	}
 	return guarantors, nil
